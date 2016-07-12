@@ -1,0 +1,309 @@
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/muzima.css" rel="stylesheet">
+    <link href="css/ui-darkness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet">
+    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery-ui-1.10.4.custom.min.js"></script>
+
+    <title>mUzima Form Builder</title>
+    <style>
+    textarea{
+        width:100%;
+        height:40%;
+        border: 1px solid #666;
+        background-color:#dedede;
+        margin-top:2%;
+        border-radius:1.5%;
+    }
+    </style>
+</head>
+
+<body>
+<div class="section" id="loginpage">
+    <h3>Login</h3>
+    <div class="form-group">
+        <label for="username">Username:</label>
+        <input class="form-control" id="username" name="username" type="text">
+    </div>
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <input class="form-control" id="password" name="password" type="password">
+    </div>
+    <div class="form-group text-center">
+        <input class="btn btn-primary" id="login" type="button" value="Login"/>
+    </div>
+</div>
+<div class="container" id="mainpage">
+    <h3 class="text-center">mUzima Form Builder</h3>
+    <div class="row" id="form-builder-section">
+        <div class="col-md-4 left-panel sp resize">
+            <div class="form-group">
+                <div class="form-group title">
+                    <h4>Concepts <span id="concepts_showing">[+]</span></h4>
+                </div>
+                <div class="form-group" id="concepts-group">
+                    <input class="form-control" id="get_concepts" type="text" placeholder="Find Concepts"/>
+                    <div class="" id="concepts">
+                    </div>
+                </div>
+                <div class="form-group title">
+                    <h4>Forms <span id="forms_showing">[+]</span></h4>
+                </div>
+                <div class="form-group" id="forms-group">
+                    <input class="form-control" id="get_forms" type="text" placeholder="Find Forms"/>
+                    <div class="" id="muzima_forms">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8 right-panel sp" id="builder-tab">
+            <div class="form-group">FORM BUILDER
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script type="text/javascript">
+
+$(document).ready(function () {
+    var serverurl = 'window.location';
+    var username = '';
+    var password = '';
+    var validCredentials = false;
+    var URL_BASE =  'http://localhost:8080/openmrs/ws/rest/v1/';
+    $('#concepts_showing').click(function(){
+        if($('#concepts-group').is(':visible')){
+            $(this).html('[-]');
+            $('#concepts-group').hide();
+        } else {
+            $(this).html('[+]');
+            $('#concepts-group').show();
+        }
+    });
+    $('#forms_showing').click(function(){
+        if($('#forms-group').is(':visible')){
+            $(this).html('[-]');
+            $('#forms-group').hide();
+        } else {
+            $(this).html('[+]');
+            $('#forms-group').show();
+        }
+    });
+    $('#concepts').hide();
+    $('#muzima_forms').hide();
+
+    var validateLoggedIn = function(){
+        return $.getJSON(URL_BASE + "session", function(data){
+            validCredentials = data.authenticated;
+        if(validCredentials) {
+            $('#mainpage').show();
+            $('#loginpage').hide();
+            return true;
+        } else {
+            $('#mainpage').hide();
+            $('#loginpage').show();
+            return false;
+        }
+        });
+    }; validateLoggedIn();
+
+    function displayConcepts(data) {
+        if(data == null || data.results.length < 1){
+            var html="<h5>Showing 0 concepts</h5>";
+            $('#concepts').html(html); 
+            $('#concepts').show();
+        } else {
+            var concepts_list_size = data.results.length;
+            var html="<h5>Showing 1 - "+ concepts_list_size +" of "+ concepts_list_size +" concepts</h5>";
+            html += '<ul style="list-style: none;">';
+            $.each(data.results, function(k,v){
+                html += '<li class="concept_item" id="'+ v.uuid+'"><p><a class="builder-a-item" href="#'+ v.uuid+'" data-object="'+ v +'">' + v.display
+                + '</a></p><div class=" concept_item_details form-group sub-section '+ v.uuid+'"></div></li>';
+            });
+            
+            $('#concepts').html(html); 
+            $('#concepts').show();
+            $('.concept_item_details').hide();
+        }
+    }
+
+    function displayConcept(data){
+        var uuid= data.uuid;
+        var html = '';
+        html += "<p><b>Name</b>: "+ data.name.display +"</p>";
+        html += "<p><b>Concept Class</b>: "+ data.conceptClass.display +"</p>";
+        html += "<p><b>Data Type</b>: "+ data.datatype.display +"</p>";
+        html += "<p><b>Description</b>: "+ data.descriptions[0].display +"</p>";
+        html += "<p><b>Retired</b>: "+ data.retired +"</p>";
+        html += "<p><b>uuid</b>: "+ data.uuid +"</p>";
+        html +="</div>";
+        $('.'+data.uuid).html(html);
+        $('.'+data.uuid).show();
+
+
+    }
+
+    function displayForms(data) { 
+        if(data == null || data.results.length < 1){
+            var html="<h5>Showing 0 forms</h5>";
+            $('#muzima_forms').html(html); 
+            $('#muzima_forms').show();
+        } else {
+            var forms_list_size = data.results.length;
+            var html="<h5>Showing 1 - "+ forms_list_size +" of "+ forms_list_size +" forms</h5>";
+            html += '<ul style="list-style: none;">';
+            $.each(data.results, function(k,v){
+                html += '<li class="muzima_form_item" id="'+ k+'"><p><a data-object="'+ v +'" class="builder-a-item" href="#'+ k+'">' + v.name + '</a></p></li>';
+            });
+            
+            $('#muzima_forms').html(html); 
+            $('#muzima_forms').show();
+        }
+    }
+
+    function displayForm(data){
+        var uuid= data.uuid;
+        var html = '';
+        html += "<p><b>Name</b>: "+ data.name +"</p>";
+        html += "<p><b>Version</b>: "+ data.version+"</p>";
+        html += "<p><b>Description</b>: "+ data.description +"</p>";
+        html += "<p><b>uuid</b>: "+ data.uuid +"</p>";
+        html += "<p><button class='btn btn-primary' id='btn-edit-"+data.uuid+"'>Edit</button><br> <textarea  id='textarea-edit-"+data.uuid+"'>"+ data.html +"</textarea></p>";
+        html +="</div>";
+        $('.'+data.uuid).html(html);
+        $("#textarea-edit-"+data.uuid).hide();
+        $('.'+data.uuid).show();
+        $("#btn-edit-"+data.uuid).click(function(){
+            $("#textarea-edit-"+data.uuid).show();
+        });
+    }
+    function getConcepts(query){
+        if(query == '*'){
+            $.getJSON(URL_BASE + "concept", displayConcepts);
+        } else if(query.length >= 1){
+            $.getJSON(URL_BASE + "concept?q="+query, displayConcepts);
+        } else{
+            displayConcepts(null);
+        }
+    }
+
+    function getConcept(uuid){
+        $.getJSON(URL_BASE + "concept/" + uuid, displayConcept);
+    }
+    function getForms(query){
+        if(query == '*'){
+            $.getJSON(URL_BASE + "muzimaforms/form", displayForms);
+        } else if(query.length >= 1){
+            $.getJSON(URL_BASE + "muzimaforms/form?q=" + query, displayForms);
+        } else{
+            displayForms(null);
+        }
+    }
+
+    $('#login').click(function(){
+       // serverurl = $('#serverurl').val();
+        username = $('#username').val();
+        password = $('#password').val();
+        $.ajax({
+              type: "GET",
+              url: URL_BASE+'session',
+              dataType: 'json',
+              async: false,
+              headers: {
+                "Authorization": "Basic " + btoa(username + ":" + password)
+              },
+              data: '{ "comment" }',
+              success: function (){
+                validCredentials = true;
+                validateLoggedIn()
+              },
+              failure:function (){
+                validCredentials = false;
+                validateLoggedIn()
+              }
+            });
+
+    });
+
+    $('#get_concepts').keyup(function(){
+        if(validateLoggedIn()){
+            getConcepts($(this).val());
+        }
+    });
+
+    $('#get_forms').keyup(function(){
+        if(validateLoggedIn()){
+            getForms($(this).val());
+        }
+    });
+
+
+$(window).bind("resize", function(event){
+    if (this == event.target) {
+       $('.sp').removeAttr('style');
+    }
+    var viewportWidth = $(window).width();
+    $('#monitor').html(viewportWidth);
+});
+  
+$('.resize').resizable({
+    handles: 's,e',  
+    minWidth:150,
+    maxWidth:1200,
+    resize:function(event,ui){
+        var x=ui.element.outerWidth();
+        var y=ui.element.outerHeight();
+        var par=$(this).parent().width();
+        var ele=ui.element;
+        var factor = par-x;
+      
+        //console.log("floated?"+par+":"+x);
+      
+        if (x==par) {
+            return;
+        }
+        
+        $.each(ele.siblings(),function(idx,item){
+          
+            ele.siblings().eq(idx).css('height',y+'px');
+            ele.siblings().eq(idx).css('width',(factor)+'px');
+          
+        });
+      
+        if (x>=(par-100)) {
+            $(".resize").resizable("option","maxWidth",ui.size.width);
+            return;
+        }
+    }
+});
+
+$('.sp:not(.resize)').resizable({
+    handles: 's',
+    start: function(event, ui) {
+        $('iframe').css('pointer-events','none');
+         },
+    stop: function(event, ui) {
+        $('iframe').css('pointer-events','auto');
+      },
+    resize:function(event,ui){
+        
+        var x=ui.element.outerWidth();
+        var y=ui.element.outerHeight();
+        var par=$(this).parent().width();
+        var ele=ui.element;
+      
+        if (x==par) {
+            return;
+        }
+        
+        $.each(ele.siblings(),function(idx,item){
+            ele.siblings().eq(idx).css('height',y+'px');
+        });
+    }
+});
+
+});
+</script>
+</html>
