@@ -56,6 +56,9 @@
                     <div class="" id="muzima_forms">
                     </div>
                 </div>
+                <div class="form-group">
+                    <input class="form-control btn btn-primary" id="logout" type="button" value="Logout"/>
+                </div>
             </div>
         </div>
         <div class="col-md-8 right-panel sp" id="builder-tab">
@@ -93,8 +96,11 @@ $(document).ready(function () {
     });
     $('#concepts').hide();
     $('#muzima_forms').hide();
+    $('#loginpage').hide();
+    $('#mainpage').hide();
 
     var validateLoggedIn = function(){
+
         return $.getJSON(URL_BASE + "session", function(data){
             validCredentials = data.authenticated;
         if(validCredentials) {
@@ -222,6 +228,20 @@ $(document).ready(function () {
               failure:function (){
                 validCredentials = false;
                 validateLoggedIn()
+              }
+            });
+
+    });
+
+    $('#logout').click(function(){
+        $.ajax({
+              type: "DELETE",
+              url: URL_BASE+'session',
+              success: function (){
+                validateLoggedIn();
+              },
+              failure:function (){
+                validateLoggedIn();
               }
             });
 

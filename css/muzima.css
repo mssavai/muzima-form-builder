@@ -6,7 +6,7 @@
 }
 
 .left-panel{
-    border-right: 5px solid #aaa;
+    border-right: 5px solid #339999;
     min-height:90%;
 }
 
@@ -14,7 +14,7 @@
 }
 
 #form-builder-section{
-    border:1px solid #aaa;
+    border:2px solid #339999;
 }
 
 .required {
@@ -31,7 +31,7 @@ input.error {
     color: black;
 }
 .title{
-    background-color:#eee;
+    background-color:#339999;
     padding:1%;
 }
 
